@@ -5,6 +5,7 @@ import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { ArgonModule } from './auth/argon.module';
 import { AuthModule } from './auth/auth.module';
+import { CommunitiesModule } from './communities/communities.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { AuthModule } from './auth/auth.module';
     PrismaModule,
     ArgonModule,
     AuthModule,
+    CommunitiesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
