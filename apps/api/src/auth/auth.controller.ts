@@ -1,8 +1,10 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { CurrentUser } from './decorators/current-user.decorator';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -24,5 +26,15 @@ export class AuthController {
     @ApiResponse({ status: 401, description: 'Credenciales inválidas o cuenta inactiva' })
     async login(@Body() dto: LoginDto) {
         return this.authService.login(dto);
+    }
+
+    @Get('me')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Obtener información del usuario autenticado actual' })
+    @ApiResponse({ status: 200, description: 'Perfil del usuario obtenido' })
+    @ApiResponse({ status: 401, description: 'No autorizado' })
+    async getProfile(@CurrentUser() user: any) {
+        return user;
     }
 }
