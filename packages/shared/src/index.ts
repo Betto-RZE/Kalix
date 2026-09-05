@@ -166,16 +166,17 @@ export type LoginDto = z.infer<typeof loginSchema>;
 // SCHEMAS DE VALIDACIÓN SECCIONES (Sprint 3)
 // ==========================================
 
-export const createSectionSchema = z.object({
-  name: z
+export const createPropertySchema = z.object({
+  sectionId: z.string().uuid('ID de sección inválido'),
+  number: z
     .string()
-    .min(1, 'El nombre de la sección es obligatorio')
-    .max(100, 'El nombre no puede exceder los 100 caracteres'),
-  description: z.string().optional(),
+    .min(1, 'El número o identificador del inmueble es obligatorio')
+    .max(50, 'El número no puede exceder 50 caracteres'),
+  address: z.string().optional(),
+  status: z.nativeEnum(PropertyStatus).optional().default(PropertyStatus.ACTIVE),
 });
+export const updatePropertySchema = createPropertySchema.partial();
+export type CreatePropertyDtoType = z.infer<typeof createPropertySchema>;
+export type UpdatePropertyDtoType = z.infer<typeof updatePropertySchema>;
 
-export const updateSectionSchema = createSectionSchema.partial();
-
-export type CreateSectionDtoType = z.infer<typeof createSectionSchema>;
-export type UpdateSectionDtoType = z.infer<typeof updateSectionSchema>;
 

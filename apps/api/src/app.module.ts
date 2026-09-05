@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { CommunitiesModule } from './communities/communities.module';
 import { MembershipsModule } from './memberships/memberships.module';
 import { SectionsModule } from './sections/sections.module';
+import { PropertiesModule } from './properties/properties.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { SectionsModule } from './sections/sections.module';
     CommunitiesModule,
     MembershipsModule,
     SectionsModule,
+    PropertiesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
