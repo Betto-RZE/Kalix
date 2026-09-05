@@ -67,7 +67,24 @@ export class FeesService {
         };
     }
 
+    async syncOverdueFees(communityId: string) {
+        const now = new Date();
+        await this.prisma.fee.updateMany({
+            where: {
+                property: { communityId },
+                status: 'PENDING',
+                dueDate: { lt: now },
+            },
+            data: {
+                status: 'OVERDUE',
+            },
+        });
+    }
+
     async findAllByCommunity(communityId: string, query: QueryFeeDto) {
+        // Auto-sincronizar cuotas vencidas (OVERDUE)
+        await this.syncOverdueFees(communityId);
+
         const { propertyId, sectionId, status, search } = query;
 
         const whereClause: any = {
@@ -90,7 +107,7 @@ export class FeesService {
             whereClause.concept = { contains: search, mode: 'insensitive' };
         }
 
-        return this.prisma.fee.findMany({
+        const fees = await this.prisma.fee.findMany({
             where: whereClause,
             include: {
                 property: {
@@ -109,9 +126,25 @@ export class FeesService {
             },
             orderBy: { dueDate: 'asc' },
         });
+
+        return fees.map((fee) => {
+            const paidAmount = fee.payments
+                .filter((p) => p.status === 'COMPLETED')
+                .reduce((sum, p) => sum + Number(p.amount), 0);
+            const amount = Number(fee.amount);
+            const remainingAmount = Math.max(0, amount - paidAmount);
+
+            return {
+                ...fee,
+                paidAmount,
+                remainingAmount,
+            };
+        });
     }
 
     async findOne(communityId: string, id: string) {
+        await this.syncOverdueFees(communityId);
+
         const fee = await this.prisma.fee.findFirst({
             where: {
                 id,
@@ -136,7 +169,17 @@ export class FeesService {
             throw new NotFoundException('Cuota no encontrada');
         }
 
-        return fee;
+        const paidAmount = fee.payments
+            .filter((p) => p.status === 'COMPLETED')
+            .reduce((sum, p) => sum + Number(p.amount), 0);
+        const amount = Number(fee.amount);
+        const remainingAmount = Math.max(0, amount - paidAmount);
+
+        return {
+            ...fee,
+            paidAmount,
+            remainingAmount,
+        };
     }
 
     async update(communityId: string, id: string, dto: UpdateFeeDto) {

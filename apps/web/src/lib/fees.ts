@@ -28,6 +28,8 @@ export interface Fee {
     propertyId: string;
     concept: string;
     amount: number;
+    paidAmount?: number;
+    remainingAmount?: number;
     dueDate: string;
     status: FeeStatus;
     createdAt: string;
