@@ -161,3 +161,21 @@ export const loginSchema = z.object({
 });
 
 export type LoginDto = z.infer<typeof loginSchema>;
+
+// ==========================================
+// SCHEMAS DE VALIDACIÓN SECCIONES (Sprint 3)
+// ==========================================
+
+export const createSectionSchema = z.object({
+  name: z
+    .string()
+    .min(1, 'El nombre de la sección es obligatorio')
+    .max(100, 'El nombre no puede exceder los 100 caracteres'),
+  description: z.string().optional(),
+});
+
+export const updateSectionSchema = createSectionSchema.partial();
+
+export type CreateSectionDtoType = z.infer<typeof createSectionSchema>;
+export type UpdateSectionDtoType = z.infer<typeof updateSectionSchema>;
+

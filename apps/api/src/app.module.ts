@@ -7,6 +7,7 @@ import { ArgonModule } from './auth/argon.module';
 import { AuthModule } from './auth/auth.module';
 import { CommunitiesModule } from './communities/communities.module';
 import { MembershipsModule } from './memberships/memberships.module';
+import { SectionsModule } from './sections/sections.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { MembershipsModule } from './memberships/memberships.module';
     AuthModule,
     CommunitiesModule,
     MembershipsModule,
+    SectionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
