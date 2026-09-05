@@ -6,7 +6,7 @@ import { CommunitySwitcher } from '@/components/community-switcher';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
-import { Shield, Layers, Home, LogOut } from 'lucide-react';
+import { Shield, Layers, Home, Car, LogOut } from 'lucide-react';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const { user, token, logout } = useAuth();
@@ -31,6 +31,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const navItems = [
         { label: 'Secciones', href: '/dashboard/sections', icon: Layers },
         { label: 'Propiedades', href: '/dashboard/properties', icon: Home },
+        { label: 'Vehículos', href: '/dashboard/vehicles', icon: Car },
     ];
 
     return (
