@@ -4,6 +4,7 @@ export async function fetchApi<T>(
     endpoint: string,
     options: RequestInit = {},
     token?: string | null,
+    communityId?: string | null,
 ): Promise<T> {
     const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -12,6 +13,10 @@ export async function fetchApi<T>(
 
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    if (communityId) {
+        headers['x-community-id'] = communityId;
     }
 
     const response = await fetch(`${API_URL}${endpoint}`, {
