@@ -163,8 +163,19 @@ export const loginSchema = z.object({
 export type LoginDto = z.infer<typeof loginSchema>;
 
 // ==========================================
-// SCHEMAS DE VALIDACIÓN SECCIONES (Sprint 3)
+// SCHEMAS DE VALIDACIÓN ESTRUCTURA RESIDENCIAL (Sprint 3)
 // ==========================================
+
+export const createSectionSchema = z.object({
+  name: z
+    .string()
+    .min(1, 'El nombre de la sección es obligatorio')
+    .max(100, 'El nombre no puede exceder los 100 caracteres'),
+  description: z.string().optional(),
+});
+export const updateSectionSchema = createSectionSchema.partial();
+export type CreateSectionDtoType = z.infer<typeof createSectionSchema>;
+export type UpdateSectionDtoType = z.infer<typeof updateSectionSchema>;
 
 export const createPropertySchema = z.object({
   sectionId: z.string().uuid('ID de sección inválido'),
@@ -178,5 +189,15 @@ export const createPropertySchema = z.object({
 export const updatePropertySchema = createPropertySchema.partial();
 export type CreatePropertyDtoType = z.infer<typeof createPropertySchema>;
 export type UpdatePropertyDtoType = z.infer<typeof updatePropertySchema>;
+
+export const assignPropertyMemberSchema = z.object({
+  userId: z.string().uuid('ID de usuario inválido'),
+  type: z.nativeEnum(PropertyMemberType),
+  isPrimary: z.boolean().optional().default(false),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+});
+export type AssignPropertyMemberDtoType = z.infer<typeof assignPropertyMemberSchema>;
+
 
 

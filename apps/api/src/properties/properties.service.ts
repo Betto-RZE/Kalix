@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { QueryPropertyDto } from './dto/query-property.dto';
+import { AssignPropertyMemberDto } from './dto/assign-member.dto';
 
 @Injectable()
 export class PropertiesService {
@@ -159,4 +160,94 @@ export class PropertiesService {
             where: { id },
         });
     }
+
+    // ==========================================
+    // GESTIÓN DE MIEMBROS DE LA PROPIEDAD
+    // ==========================================
+
+    async assignMember(communityId: string, propertyId: string, dto: AssignPropertyMemberDto) {
+        // 1. Validar propiedad
+        const property = await this.findOne(communityId, propertyId);
+
+        // 2. Validar que el usuario pertenezca a esta comunidad
+        const membership = await this.prisma.communityMembership.findUnique({
+            where: {
+                userId_communityId: {
+                    userId: dto.userId,
+                    communityId,
+                },
+            },
+        });
+
+        if (!membership) {
+            throw new BadRequestException('El usuario especificado no pertenece a esta comunidad');
+        }
+
+        // 3. Verificar si el usuario ya está asignado a la propiedad
+        const existingMember = await this.prisma.propertyMember.findFirst({
+            where: {
+                propertyId,
+                userId: dto.userId,
+            },
+        });
+
+        if (existingMember) {
+            throw new ConflictException('El usuario ya está asignado a esta propiedad');
+        }
+
+        // 4. Si se marca como principal, desmarcar a otros principales de ese tipo
+        if (dto.isPrimary) {
+            await this.prisma.propertyMember.updateMany({
+                where: { propertyId, type: dto.type },
+                data: { isPrimary: false },
+            });
+        }
+
+        return this.prisma.propertyMember.create({
+            data: {
+                propertyId,
+                userId: dto.userId,
+                type: dto.type,
+                isPrimary: dto.isPrimary ?? false,
+                startDate: dto.startDate ? new Date(dto.startDate) : new Date(),
+                endDate: dto.endDate ? new Date(dto.endDate) : null,
+            },
+            include: {
+                user: {
+                    select: { id: true, firstName: true, lastName: true, email: true, phone: true },
+                },
+            },
+        });
+    }
+
+    async getMembers(communityId: string, propertyId: string) {
+        await this.findOne(communityId, propertyId);
+
+        return this.prisma.propertyMember.findMany({
+            where: { propertyId },
+            include: {
+                user: {
+                    select: { id: true, firstName: true, lastName: true, email: true, phone: true, avatarUrl: true },
+                },
+            },
+            orderBy: [{ isPrimary: 'desc' }, { createdAt: 'asc' }],
+        });
+    }
+
+    async removeMember(communityId: string, propertyId: string, memberId: string) {
+        await this.findOne(communityId, propertyId);
+
+        const member = await this.prisma.propertyMember.findFirst({
+            where: { id: memberId, propertyId },
+        });
+
+        if (!member) {
+            throw new NotFoundException('Miembro no encontrado en esta propiedad');
+        }
+
+        return this.prisma.propertyMember.delete({
+            where: { id: memberId },
+        });
+    }
 }
+

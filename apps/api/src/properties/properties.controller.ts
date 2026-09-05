@@ -4,6 +4,7 @@ import { PropertiesService } from './properties.service';
 import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { QueryPropertyDto } from './dto/query-property.dto';
+import { AssignPropertyMemberDto } from './dto/assign-member.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CommunityGuard } from '../common/guards/community.guard';
 
@@ -65,4 +66,37 @@ export class PropertiesController {
     ) {
         return this.propertiesService.remove(communityId, id);
     }
+
+    @Post(':id/members')
+    @ApiOperation({ summary: 'Asignar un residente o propietario a una propiedad' })
+    @ApiResponse({ status: 201, description: 'Miembro asignado exitosamente' })
+    async assignMember(
+        @Param('communityId') communityId: string,
+        @Param('id') propertyId: string,
+        @Body() dto: AssignPropertyMemberDto,
+    ) {
+        return this.propertiesService.assignMember(communityId, propertyId, dto);
+    }
+
+    @Get(':id/members')
+    @ApiOperation({ summary: 'Obtener la lista de residentes y propietarios de una propiedad' })
+    @ApiResponse({ status: 200, description: 'Lista de miembros' })
+    async getMembers(
+        @Param('communityId') communityId: string,
+        @Param('id') propertyId: string,
+    ) {
+        return this.propertiesService.getMembers(communityId, propertyId);
+    }
+
+    @Delete(':id/members/:memberId')
+    @ApiOperation({ summary: 'Desvincular un miembro de una propiedad' })
+    @ApiResponse({ status: 200, description: 'Miembro desvinculado' })
+    async removeMember(
+        @Param('communityId') communityId: string,
+        @Param('id') propertyId: string,
+        @Param('memberId') memberId: string,
+    ) {
+        return this.propertiesService.removeMember(communityId, propertyId, memberId);
+    }
 }
+
