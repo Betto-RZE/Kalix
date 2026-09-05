@@ -219,4 +219,28 @@ export const updateVehicleSchema = createVehicleSchema.partial();
 export type CreateVehicleDtoType = z.infer<typeof createVehicleSchema>;
 export type UpdateVehicleDtoType = z.infer<typeof updateVehicleSchema>;
 
+// ==========================================
+// SCHEMAS DE VALIDACIÓN CUOTAS & FINANZAS (Sprint 4)
+// ==========================================
+
+export const createFeeSchema = z.object({
+  propertyId: z.string().uuid('ID de propiedad inválido'),
+  concept: z.string().min(1, 'El concepto de la cuota es obligatorio').max(200),
+  amount: z.number().positive('El monto debe ser un número positivo'),
+  dueDate: z.string().min(1, 'La fecha límite de pago es obligatoria'),
+  status: z.nativeEnum(FeeStatus).optional().default(FeeStatus.PENDING),
+});
+
+export const createBulkFeeSchema = z.object({
+  sectionId: z.string().uuid('ID de sección inválido').optional(),
+  concept: z.string().min(1, 'El concepto es obligatorio').max(200),
+  amount: z.number().positive('El monto debe ser positivo'),
+  dueDate: z.string().min(1, 'La fecha límite de pago es obligatoria'),
+});
+
+export const updateFeeSchema = createFeeSchema.partial();
+
+export type CreateFeeDtoType = z.infer<typeof createFeeSchema>;
+export type CreateBulkFeeDtoType = z.infer<typeof createBulkFeeSchema>;
+export type UpdateFeeDtoType = z.infer<typeof updateFeeSchema>;
 
