@@ -265,4 +265,23 @@ export const updatePaymentStatusSchema = z.object({
 export type CreatePaymentDtoType = z.infer<typeof createPaymentSchema>;
 export type UpdatePaymentStatusDtoType = z.infer<typeof updatePaymentStatusSchema>;
 
+// ==========================================
+// SCHEMAS DE VALIDACIÓN GASTOS (Sprint 4)
+// ==========================================
+
+export const createExpenseSchema = z.object({
+  category: z.string().min(1, 'La categoría es obligatoria').max(100),
+  description: z.string().min(1, 'La descripción del gasto es obligatoria'),
+  amount: z.number().positive('El monto debe ser un número positivo'),
+  date: z.string().min(1, 'La fecha del gasto es obligatoria'),
+  supplier: z.string().optional(),
+  receiptUrl: z.string().optional(),
+});
+
+export const updateExpenseSchema = createExpenseSchema.partial();
+
+export type CreateExpenseDtoType = z.infer<typeof createExpenseSchema>;
+export type UpdateExpenseDtoType = z.infer<typeof updateExpenseSchema>;
+
+
 

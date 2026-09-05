@@ -12,6 +12,7 @@ import { PropertiesModule } from './properties/properties.module';
 import { VehiclesModule } from './vehicles/vehicles.module';
 import { FeesModule } from './fees/fees.module';
 import { PaymentsModule } from './payments/payments.module';
+import { ExpensesModule } from './expenses/expenses.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { PaymentsModule } from './payments/payments.module';
     VehiclesModule,
     FeesModule,
     PaymentsModule,
+    ExpensesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
