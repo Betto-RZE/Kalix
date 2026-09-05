@@ -25,7 +25,7 @@ export default function LoginPage() {
         try {
             setErrorMsg(null);
             await login(data);
-            router.push('/');
+            router.push('/dashboard/sections');
         } catch (err: any) {
             setErrorMsg(err.message || 'Credenciales incorrectas');
         }

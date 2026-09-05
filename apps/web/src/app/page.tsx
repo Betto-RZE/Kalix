@@ -1,10 +1,24 @@
-import { Shield, Home, Building2, Users, FileText, KeyRound, Wrench, Calendar, Bell } from 'lucide-react';
+'use client';
+
+import { useAuth } from '@/context/auth-context';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import Link from 'next/link';
+import { Shield, Layers, Home, ArrowRight, LogIn } from 'lucide-react';
 
 export default function HomePage() {
+  const { user, token } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (token && user) {
+      router.push('/dashboard/sections');
+    }
+  }, [token, user, router]);
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100 flex flex-col items-center justify-center p-6">
       <div className="max-w-4xl w-full text-center space-y-8">
-        
         {/* Header Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-sky-500/30 text-sky-400 text-sm font-medium">
           <Shield className="w-4 h-4 text-sky-400" />
@@ -20,53 +34,48 @@ export default function HomePage() {
           Plataforma web modular y escalable para la administración integral de fraccionamientos, condominios y comunidades privadas.
         </p>
 
-        {/* Status Indicators */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-left pt-6">
-          <div className="glass-card p-5 rounded-xl border border-slate-800 space-y-2">
-            <div className="p-2 bg-sky-500/10 rounded-lg w-fit text-sky-400">
-              <Building2 className="w-5 h-5" />
-            </div>
-            <h3 className="font-semibold text-slate-200">Monorepo Ready</h3>
-            <p className="text-xs text-slate-400">Next.js + NestJS + Turborepo + Prisma</p>
-          </div>
-
-          <div className="glass-card p-5 rounded-xl border border-slate-800 space-y-2">
-            <div className="p-2 bg-emerald-500/10 rounded-lg w-fit text-emerald-400">
-              <KeyRound className="w-5 h-5" />
-            </div>
-            <h3 className="font-semibold text-slate-200">Multi-Tenancy</h3>
-            <p className="text-xs text-slate-400">Aislamiento por comunidad & RBAC</p>
-          </div>
-
-          <div className="glass-card p-5 rounded-xl border border-slate-800 space-y-2">
-            <div className="p-2 bg-amber-500/10 rounded-lg w-fit text-amber-400">
-              <FileText className="w-5 h-5" />
-            </div>
-            <h3 className="font-semibold text-slate-200">PostgreSQL + Prisma</h3>
-            <p className="text-xs text-slate-400">25 Entidades del Modelo Maestro</p>
-          </div>
-
-          <div className="glass-card p-5 rounded-xl border border-slate-800 space-y-2">
-            <div className="p-2 bg-purple-500/10 rounded-lg w-fit text-purple-400">
-              <Wrench className="w-5 h-5" />
-            </div>
-            <h3 className="font-semibold text-slate-200">Stack Completo</h3>
-            <p className="text-xs text-slate-400">TanStack Query, Zod, Tailwind CSS</p>
-          </div>
+        {/* Action Buttons */}
+        <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
+          {token && user ? (
+            <Link
+              href="/dashboard/sections"
+              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold shadow-lg shadow-sky-500/25 transition-all text-base"
+            >
+              <Layers className="w-5 h-5" />
+              <span>Ir al Dashboard (Secciones & Propiedades)</span>
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold shadow-lg shadow-sky-500/25 transition-all text-base"
+            >
+              <LogIn className="w-5 h-5" />
+              <span>Iniciar Sesión en KALIX</span>
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+          )}
         </div>
 
-        {/* Roles Badge Grid */}
-        <div className="pt-6 glass-card p-6 rounded-2xl border border-slate-800 space-y-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Roles Configurados en el Sistema</h2>
-          <div className="flex flex-wrap justify-center gap-3">
-            <span className="px-3 py-1.5 rounded-lg bg-sky-500/10 text-sky-300 border border-sky-500/20 text-xs font-semibold">ADMIN</span>
-            <span className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 text-xs font-semibold">RESIDENT</span>
-            <span className="px-3 py-1.5 rounded-lg bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 text-xs font-semibold">OWNER</span>
-            <span className="px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20 text-xs font-semibold">SECURITY</span>
-            <span className="px-3 py-1.5 rounded-lg bg-rose-500/10 text-rose-300 border border-rose-500/20 text-xs font-semibold">MAINTENANCE</span>
-          </div>
+        {/* Navigation Quick Links */}
+        <div className="flex justify-center gap-6 pt-2">
+          <Link
+            href="/dashboard/sections"
+            className="flex items-center gap-2 text-sm font-semibold text-slate-400 hover:text-sky-400 transition-colors"
+          >
+            <Layers className="w-4 h-4" />
+            <span>Gestión de Secciones</span>
+          </Link>
+          <Link
+            href="/dashboard/properties"
+            className="flex items-center gap-2 text-sm font-semibold text-slate-400 hover:text-indigo-400 transition-colors"
+          >
+            <Home className="w-4 h-4" />
+            <span>Gestión de Propiedades</span>
+          </Link>
         </div>
       </div>
     </main>
   );
 }
+
