@@ -11,6 +11,7 @@ import { SectionsModule } from './sections/sections.module';
 import { PropertiesModule } from './properties/properties.module';
 import { VehiclesModule } from './vehicles/vehicles.module';
 import { FeesModule } from './fees/fees.module';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { FeesModule } from './fees/fees.module';
     PropertiesModule,
     VehiclesModule,
     FeesModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

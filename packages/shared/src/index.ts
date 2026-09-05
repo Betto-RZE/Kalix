@@ -244,3 +244,25 @@ export type CreateFeeDtoType = z.infer<typeof createFeeSchema>;
 export type CreateBulkFeeDtoType = z.infer<typeof createBulkFeeSchema>;
 export type UpdateFeeDtoType = z.infer<typeof updateFeeSchema>;
 
+// ==========================================
+// SCHEMAS DE VALIDACIÓN PAGOS (Sprint 4)
+// ==========================================
+
+export const createPaymentSchema = z.object({
+  feeId: z.string().uuid('ID de cuota inválido'),
+  amount: z.number().positive('El monto debe ser un número positivo'),
+  paymentDate: z.string().optional(),
+  method: z.nativeEnum(PaymentMethod).optional().default(PaymentMethod.TRANSFER),
+  reference: z.string().optional(),
+  status: z.nativeEnum(PaymentStatus).optional().default(PaymentStatus.COMPLETED),
+  receiptUrl: z.string().optional(),
+});
+
+export const updatePaymentStatusSchema = z.object({
+  status: z.nativeEnum(PaymentStatus),
+});
+
+export type CreatePaymentDtoType = z.infer<typeof createPaymentSchema>;
+export type UpdatePaymentStatusDtoType = z.infer<typeof updatePaymentStatusSchema>;
+
+
