@@ -1,0 +1,594 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ==========================================
+// ENUMS
+// ==========================================
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum RoleName {
+  ADMIN
+  RESIDENT
+  OWNER
+  SECURITY
+  MAINTENANCE
+}
+
+enum CommunityStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum PropertyStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+}
+
+enum PropertyMemberType {
+  OWNER
+  RESIDENT
+}
+
+enum VehicleType {
+  CAR
+  MOTORCYCLE
+  TRUCK
+  OTHER
+}
+
+enum VehicleStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum FeeStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  TRANSFER
+  CARD
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum MaintenancePriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum MaintenanceStatus {
+  PENDING
+  ASSIGNED
+  IN_PROGRESS
+  RESOLVED
+  CANCELLED
+}
+
+enum CommonAreaStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum VisitorPassStatus {
+  ACTIVE
+  USED
+  EXPIRED
+  CANCELLED
+}
+
+enum AccessType {
+  ENTRY
+  EXIT
+}
+
+enum AccessStatus {
+  AUTHORIZED
+  DENIED
+}
+
+enum AnnouncementType {
+  GENERAL
+  MAINTENANCE
+  SECURITY
+  PAYMENT
+  EVENT
+  URGENT
+}
+
+enum AnnouncementStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum NotificationType {
+  FEE_CREATED
+  PAYMENT_REGISTERED
+  FEE_OVERDUE
+  MAINTENANCE_UPDATED
+  RESERVATION_CONFIRMED
+  RESERVATION_UPCOMING
+  VISITOR_REGISTERED
+  ANNOUNCEMENT_PUBLISHED
+  GENERAL
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  ASSIGN
+  PAY
+  CANCEL
+  PUBLISH
+  ACCESS
+  LOGIN
+}
+
+// ==========================================
+// MODELS
+// ==========================================
+
+model User {
+  id           String     @id @default(uuid()) @db.Uuid
+  firstName    String     @db.VarChar(100)
+  lastName     String     @db.VarChar(100)
+  email        String     @unique @db.VarChar(255)
+  passwordHash String     @db.Text
+  phone        String?    @db.VarChar(20)
+  avatarUrl    String?    @db.Text
+  status       UserStatus @default(ACTIVE)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  memberships        CommunityMembership[]
+  propertyMemberships PropertyMember[]
+  vehicles           Vehicle[]
+  maintenanceCreated MaintenanceReport[]    @relation("ReportCreatedBy")
+  maintenanceAssigned MaintenanceReport[]   @relation("ReportAssignedTo")
+  maintenanceHistory MaintenanceHistory[]
+  reservations       Reservation[]
+  visitorPasses      VisitorPass[]          @relation("PassCreatedBy")
+  accessLogs         AccessLog[]            @relation("AccessSecurityUser")
+  announcements      Announcement[]         @relation("AnnouncementCreatedBy")
+  notifications      Notification[]
+  files              File[]
+  auditLogs          AuditLog[]
+
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        RoleName @unique
+  description String?  @db.Text
+
+  permissions RolePermission[]
+  memberships CommunityMembership[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String  @id @default(uuid()) @db.Uuid
+  name        String  @unique @db.VarChar(100)
+  description String? @db.Text
+
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           String @id @default(uuid()) @db.Uuid
+  roleId       String @db.Uuid
+  permissionId String @db.Uuid
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model Community {
+  id          String          @id @default(uuid()) @db.Uuid
+  name        String          @db.VarChar(150)
+  description String?         @db.Text
+  address     String?         @db.Text
+  phone       String?         @db.VarChar(20)
+  email       String?         @db.VarChar(255)
+  logoUrl     String?         @db.Text
+  status      CommunityStatus @default(ACTIVE)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  memberships           CommunityMembership[]
+  sections              Section[]
+  properties            Property[]
+  expenses              Expense[]
+  maintenanceCategories MaintenanceCategory[]
+  maintenanceReports    MaintenanceReport[]
+  commonAreas           CommonArea[]
+  announcements         Announcement[]
+  notifications         Notification[]
+  auditLogs             AuditLog[]
+
+  @@map("communities")
+}
+
+model CommunityMembership {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @db.Uuid
+  communityId String    @db.Uuid
+  roleId      String    @db.Uuid
+  status      UserStatus @default(ACTIVE)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  community Community @relation(fields: [communityId], references: [id], onDelete: Restrict)
+  role      Role      @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, communityId])
+  @@map("community_memberships")
+}
+
+model Section {
+  id          String   @id @default(uuid()) @db.Uuid
+  communityId String   @db.Uuid
+  name        String   @db.VarChar(100)
+  description String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  community  Community  @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  properties Property[]
+
+  @@unique([communityId, name])
+  @@map("sections")
+}
+
+model Property {
+  id          String         @id @default(uuid()) @db.Uuid
+  communityId String         @db.Uuid
+  sectionId   String         @db.Uuid
+  number      String         @db.VarChar(50)
+  address     String?        @db.Text
+  status      PropertyStatus @default(ACTIVE)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  community   Community        @relation(fields: [communityId], references: [id], onDelete: Restrict)
+  section     Section          @relation(fields: [sectionId], references: [id], onDelete: Restrict)
+  members     PropertyMember[]
+  vehicles    Vehicle[]
+  fees        Fee[]
+  reports     MaintenanceReport[]
+  reservations Reservation[]
+  visitorPasses VisitorPass[]
+
+  @@unique([sectionId, number])
+  @@map("properties")
+}
+
+model PropertyMember {
+  id         String             @id @default(uuid()) @db.Uuid
+  propertyId String             @db.Uuid
+  userId     String             @db.Uuid
+  type       PropertyMemberType
+  isPrimary  Boolean            @default(false)
+  startDate  DateTime           @default(now())
+  endDate    DateTime?
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@map("property_members")
+}
+
+model Vehicle {
+  id           String        @id @default(uuid()) @db.Uuid
+  propertyId   String        @db.Uuid
+  userId       String        @db.Uuid
+  brand        String        @db.VarChar(50)
+  model        String        @db.VarChar(50)
+  color        String        @db.VarChar(30)
+  licensePlate String        @db.VarChar(20)
+  type         VehicleType   @default(CAR)
+  status       VehicleStatus @default(ACTIVE)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@map("vehicles")
+}
+
+model Fee {
+  id         String    @id @default(uuid()) @db.Uuid
+  propertyId String    @db.Uuid
+  concept    String    @db.VarChar(200)
+  amount     Decimal   @db.Decimal(12, 2)
+  dueDate    DateTime
+  status     FeeStatus @default(PENDING)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  property Property  @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  payments Payment[]
+
+  @@map("fees")
+}
+
+model Payment {
+  id           String        @id @default(uuid()) @db.Uuid
+  feeId        String        @db.Uuid
+  amount       Decimal       @db.Decimal(12, 2)
+  paymentDate  DateTime      @default(now())
+  method       PaymentMethod @default(TRANSFER)
+  reference    String?       @db.VarChar(100)
+  status       PaymentStatus @default(PENDING)
+  receiptUrl   String?       @db.Text
+  registeredBy String?       @db.Uuid
+  createdAt    DateTime      @default(now())
+
+  fee Fee @relation(fields: [feeId], references: [id], onDelete: Restrict)
+
+  @@map("payments")
+}
+
+model Expense {
+  id          String   @id @default(uuid()) @db.Uuid
+  communityId String   @db.Uuid
+  category    String   @db.VarChar(100)
+  description String   @db.Text
+  amount      Decimal  @db.Decimal(12, 2)
+  date        DateTime
+  supplier    String?  @db.VarChar(150)
+  receiptUrl  String?  @db.Text
+  createdBy   String   @db.Uuid
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Restrict)
+
+  @@map("expenses")
+}
+
+model MaintenanceCategory {
+  id          String  @id @default(uuid()) @db.Uuid
+  communityId String  @db.Uuid
+  name        String  @db.VarChar(100)
+  description String? @db.Text
+
+  community Community           @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  reports   MaintenanceReport[]
+
+  @@map("maintenance_categories")
+}
+
+model MaintenanceReport {
+  id          String              @id @default(uuid()) @db.Uuid
+  communityId String              @db.Uuid
+  propertyId  String?             @db.Uuid
+  createdBy   String              @db.Uuid
+  categoryId  String              @db.Uuid
+  title       String              @db.VarChar(200)
+  description String              @db.Text
+  priority    MaintenancePriority @default(MEDIUM)
+  status      MaintenanceStatus   @default(PENDING)
+  assignedTo  String?             @db.Uuid
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  resolvedAt  DateTime?
+
+  community Community           @relation(fields: [communityId], references: [id], onDelete: Restrict)
+  property  Property?           @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  creator   User                @relation("ReportCreatedBy", fields: [createdBy], references: [id], onDelete: Restrict)
+  assignee  User?               @relation("ReportAssignedTo", fields: [assignedTo], references: [id], onDelete: SetNull)
+  category  MaintenanceCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  history   MaintenanceHistory[]
+
+  @@map("maintenance_reports")
+}
+
+model MaintenanceHistory {
+  id             String            @id @default(uuid()) @db.Uuid
+  reportId       String            @db.Uuid
+  userId         String            @db.Uuid
+  previousStatus MaintenanceStatus
+  newStatus      MaintenanceStatus
+  comment        String?           @db.Text
+  createdAt      DateTime          @default(now())
+
+  report MaintenanceReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  user   User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@map("maintenance_histories")
+}
+
+model CommonArea {
+  id          String           @id @default(uuid()) @db.Uuid
+  communityId String           @db.Uuid
+  name        String           @db.VarChar(100)
+  description String?          @db.Text
+  location    String?          @db.VarChar(150)
+  capacity    Int?
+  status      CommonAreaStatus @default(ACTIVE)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  community    Community     @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  reservations Reservation[]
+
+  @@map("common_areas")
+}
+
+model Reservation {
+  id            String            @id @default(uuid()) @db.Uuid
+  commonAreaId  String            @db.Uuid
+  propertyId    String?           @db.Uuid
+  userId        String            @db.Uuid
+  startDateTime DateTime
+  endDateTime   DateTime
+  status        ReservationStatus @default(PENDING)
+  notes         String?           @db.Text
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  commonArea CommonArea @relation(fields: [commonAreaId], references: [id], onDelete: Restrict)
+  property   Property?  @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@map("reservations")
+}
+
+model Visitor {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String   @db.VarChar(150)
+  phone        String?  @db.VarChar(20)
+  vehiclePlate String?  @db.VarChar(20)
+  notes        String?  @db.Text
+  createdAt    DateTime @default(now())
+
+  passes VisitorPass[]
+
+  @@map("visitors")
+}
+
+model VisitorPass {
+  id         String            @id @default(uuid()) @db.Uuid
+  visitorId  String            @db.Uuid
+  propertyId String            @db.Uuid
+  createdBy  String            @db.Uuid
+  validFrom  DateTime
+  validUntil DateTime
+  status     VisitorPassStatus @default(ACTIVE)
+  qrToken    String            @unique @db.VarChar(255)
+  createdAt  DateTime          @default(now())
+
+  visitor  Visitor     @relation(fields: [visitorId], references: [id], onDelete: Restrict)
+  property Property    @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  creator  User        @relation("PassCreatedBy", fields: [createdBy], references: [id], onDelete: Restrict)
+  logs     AccessLog[]
+
+  @@map("visitor_passes")
+}
+
+model AccessLog {
+  id             String       @id @default(uuid()) @db.Uuid
+  visitorPassId  String       @db.Uuid
+  securityUserId String       @db.Uuid
+  type           AccessType
+  timestamp      DateTime     @default(now())
+  status         AccessStatus @default(AUTHORIZED)
+  createdAt      DateTime     @default(now())
+
+  visitorPass  VisitorPass @relation(fields: [visitorPassId], references: [id], onDelete: Restrict)
+  securityUser User        @relation("AccessSecurityUser", fields: [securityUserId], references: [id], onDelete: Restrict)
+
+  @@map("access_logs")
+}
+
+model Announcement {
+  id          String             @id @default(uuid()) @db.Uuid
+  communityId String             @db.Uuid
+  title       String             @db.VarChar(200)
+  content     String             @db.Text
+  type        AnnouncementType   @default(GENERAL)
+  publishedAt DateTime?
+  expiresAt   DateTime?
+  createdBy   String             @db.Uuid
+  status      AnnouncementStatus @default(DRAFT)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  creator   User      @relation("AnnouncementCreatedBy", fields: [createdBy], references: [id], onDelete: Restrict)
+
+  @@map("announcements")
+}
+
+model Notification {
+  id          String           @id @default(uuid()) @db.Uuid
+  userId      String           @db.Uuid
+  communityId String           @db.Uuid
+  type        NotificationType @default(GENERAL)
+  title       String           @db.VarChar(200)
+  message     String           @db.Text
+  readAt      DateTime?
+  createdAt   DateTime         @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model File {
+  id           String   @id @default(uuid()) @db.Uuid
+  uploadedBy   String   @db.Uuid
+  name         String   @db.VarChar(255)
+  originalName String   @db.VarChar(255)
+  mimeType     String   @db.VarChar(100)
+  size         Int
+  storageKey   String   @db.VarChar(500)
+  createdAt    DateTime @default(now())
+
+  uploader User @relation(fields: [uploadedBy], references: [id], onDelete: Restrict)
+
+  @@map("files")
+}
+
+model AuditLog {
+  id          String      @id @default(uuid()) @db.Uuid
+  userId      String?     @db.Uuid
+  communityId String?     @db.Uuid
+  action      AuditAction
+  entity      String      @db.VarChar(100)
+  entityId    String      @db.VarChar(100)
+  metadata    Json?
+  createdAt   DateTime    @default(now())
+
+  user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  community Community? @relation(fields: [communityId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}

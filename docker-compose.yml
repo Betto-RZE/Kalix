@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: kalix-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: kalix_admin
+      POSTGRES_PASSWORD: kalix_password_dev
+      POSTGRES_DB: kalix_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - kalix_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kalix_admin -d kalix_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  kalix_pgdata:
+    driver: local
