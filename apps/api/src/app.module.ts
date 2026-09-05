@@ -9,6 +9,7 @@ import { CommunitiesModule } from './communities/communities.module';
 import { MembershipsModule } from './memberships/memberships.module';
 import { SectionsModule } from './sections/sections.module';
 import { PropertiesModule } from './properties/properties.module';
+import { VehiclesModule } from './vehicles/vehicles.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { PropertiesModule } from './properties/properties.module';
     MembershipsModule,
     SectionsModule,
     PropertiesModule,
+    VehiclesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

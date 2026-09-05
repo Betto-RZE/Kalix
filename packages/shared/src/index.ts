@@ -199,5 +199,24 @@ export const assignPropertyMemberSchema = z.object({
 });
 export type AssignPropertyMemberDtoType = z.infer<typeof assignPropertyMemberSchema>;
 
+// ==========================================
+// SCHEMAS DE VALIDACIÓN VEHÍCULOS (Sprint 3)
+// ==========================================
+
+export const createVehicleSchema = z.object({
+  propertyId: z.string().uuid('ID de propiedad inválido'),
+  userId: z.string().uuid('ID de usuario inválido'),
+  brand: z.string().min(1, 'La marca es obligatoria').max(50),
+  model: z.string().min(1, 'El modelo es obligatorio').max(50),
+  color: z.string().min(1, 'El color es obligatorio').max(30),
+  licensePlate: z.string().min(1, 'La placa es obligatoria').max(20),
+  type: z.nativeEnum(VehicleType).optional().default(VehicleType.CAR),
+  status: z.nativeEnum(VehicleStatus).optional().default(VehicleStatus.ACTIVE),
+});
+
+export const updateVehicleSchema = createVehicleSchema.partial();
+
+export type CreateVehicleDtoType = z.infer<typeof createVehicleSchema>;
+export type UpdateVehicleDtoType = z.infer<typeof updateVehicleSchema>;
 
 
